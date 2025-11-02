@@ -811,10 +811,12 @@
                     <span>Subtotal:</span>
                     <span id="cart-subtotal">Rp 0</span>
                 </div>
-                <div class="total-line">
+                <!-- [--- REVISI PAJAK DIHILANGKAN ---] -->
+                <div class="total-line" style="display: none;">
                     <span>Pajak (10%):</span>
                     <span id="cart-tax">Rp 0</span>
                 </div>
+                <!-- [--- AKHIR REVISI ---] -->
                 <div class="total-line final">
                     <span>Total:</span>
                     <span id="cart-total">Rp 0</span>
@@ -873,10 +875,12 @@
                     <span>Subtotal:</span>
                     <span id="payment-subtotal"></span>
                 </div>
-                <div class="receipt-line">
+                <!-- [--- REVISI PAJAK DIHILANGKAN ---] -->
+                <div class="receipt-line" style="display: none;">
                     <span>Pajak (10%):</span>
                     <span id="payment-tax"></span>
                 </div>
+                <!-- [--- AKHIR REVISI ---] -->
                 <div class="receipt-line total">
                     <span>Total Bayar:</span>
                     <span id="payment-total"></span>
@@ -963,10 +967,12 @@
                     <span>Sub Total</span>
                     <span id="success-subtotal"></span>
                 </div>
-                <div class="receipt-line">
+                <!-- [--- REVISI PAJAK DIHILANGKAN ---] -->
+                <div class="receipt-line" style="display: none;">
                     <span>PPN 10%</span>
                     <span id="success-tax"></span>
                 </div>
+                <!-- [--- AKHIR REVISI ---] -->
                 
                 <div class="receipt-line total" style="font-size: 1.2rem; margin-top: 10px;">
                     <span>Total Payment</span>
@@ -1125,11 +1131,11 @@
         function updateActiveCategoryButton() {
              const categoryButtons = document.querySelectorAll('.category-btn');
              categoryButtons.forEach(btn => {
-                if (btn.dataset.category === currentCategory) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                 if (btn.dataset.category === currentCategory) {
+                     btn.classList.add('active');
+                 } else {
+                     btn.classList.remove('active');
+                 }
             });
         }
 
@@ -1464,12 +1470,13 @@
                 checkoutBtn.disabled = false;
             }
 
-            const tax = Math.round(subtotal * 0.10); // Pajak 10%
-            const total = subtotal + tax;
+            // [--- REVISI PAJAK DIHILANGKAN ---]
+            const tax = 0; // Math.round(subtotal * 0.10); // Pajak 10%
+            const total = subtotal; // + tax;
 
             cartCount.textContent = itemCount;
             cartSubtotal.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-            cartTax.textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+            cartTax.textContent = `Rp ${tax.toLocaleString('id-ID')}`; // Tetap diisi 0
             cartTotal.textContent = `Rp ${total.toLocaleString('id-ID')}`;
         }
         
@@ -1514,8 +1521,9 @@
             
             // Calculate totals
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = Math.round(subtotal * 0.10);
-            const total = subtotal + tax;
+            // [--- REVISI PAJAK DIHILANGKAN ---]
+            const tax = 0; // Math.round(subtotal * 0.10);
+            const total = subtotal; // + tax;
 
             // Update payment modal details
             const paymentItems = document.getElementById('payment-items');
@@ -1530,7 +1538,7 @@
             });
 
             document.getElementById('payment-subtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-            document.getElementById('payment-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+            document.getElementById('payment-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`; // Tetap diisi 0
             document.getElementById('payment-total').textContent = `Rp ${total.toLocaleString('id-ID')}`;
 
             closeModal('checkout-modal');
@@ -1566,8 +1574,9 @@
 
             // Siapkan data pesanan untuk Firestore
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const tax = Math.round(subtotal * 0.10);
-            const total = subtotal + tax;
+            // [--- REVISI PAJAK DIHILANGKAN ---]
+            const tax = 0; // Math.round(subtotal * 0.10);
+            const total = subtotal; // + tax;
             
             const orderData = {
                 customer: customerName,
@@ -1580,8 +1589,8 @@
                     price: item.price
                 })),
                 subtotal: subtotal,
-                tax: tax,
-                total: total,
+                tax: tax, // Akan mengirim 0
+                total: total, // Akan mengirim nilai subtotal
                 status: 'pending', // Status awal: menunggu konfirmasi kasir
                 paymentMethod: selectedPaymentMethod,
                 createdAt: serverTimestamp() // Waktu pesanan dibuat
@@ -1625,8 +1634,9 @@
 
                 // Isi Total
                 document.getElementById('success-subtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-                document.getElementById('success-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`;
-                document.getElementById('success-total').textContent = `Rp ${total.toLocaleString('id-ID')}`;
+                // [--- REVISI PAJAK DIHILANGKAN ---]
+                document.getElementById('success-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`; // tax dari scope confirmPayment (nilainya 0)
+                document.getElementById('success-total').textContent = `Rp ${total.toLocaleString('id-ID')}`; // total dari scope confirmPayment (nilainya = subtotal)
                 document.getElementById('success-payment-method').textContent = selectedPaymentMethod;
                 // --- AKHIR POPULASI STRUK SUKSES ---
 
@@ -1672,4 +1682,3 @@
     </script>
 </body>
 </html>
-
