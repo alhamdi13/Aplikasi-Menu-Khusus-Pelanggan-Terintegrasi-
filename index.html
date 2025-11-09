@@ -43,7 +43,7 @@
         .menu-slider-container {
             position: relative;
             width: 100%;
-            height: calc(100vh - 55px);
+            height: 100vh;
             overflow: hidden;
             background: #000;
         }
@@ -130,7 +130,7 @@
         .slide-content {
             height: 40%;
             background: white;
-            padding: 30px 30px 80px;
+            padding: 30px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -317,7 +317,7 @@
         }
 
         /* Responsive */
-        @media (max-width: 1024px) {
+        @media (max-width: 768px) {
             .category-selector {
                 gap: 8px;
                 padding: 10px 15px;
@@ -338,7 +338,7 @@
             .slide-price { font-size: 1.5rem; }
             .order-slide-btn { font-size: 1rem; padding: 12px 30px; }
             .slide-image { height: 50%; }
-            .slide-content { height: 50%; padding: 20px 20px 80px; }
+            .slide-content { height: 50%; padding: 20px; }
         }
 
         /* Cart Styles */
@@ -811,12 +811,10 @@
                     <span>Subtotal:</span>
                     <span id="cart-subtotal">Rp 0</span>
                 </div>
-                <!-- [--- REVISI PAJAK DIHILANGKAN ---] -->
-                <div class="total-line" style="display: none;">
+                <div class="total-line">
                     <span>Pajak (10%):</span>
                     <span id="cart-tax">Rp 0</span>
                 </div>
-                <!-- [--- AKHIR REVISI ---] -->
                 <div class="total-line final">
                     <span>Total:</span>
                     <span id="cart-total">Rp 0</span>
@@ -875,12 +873,10 @@
                     <span>Subtotal:</span>
                     <span id="payment-subtotal"></span>
                 </div>
-                <!-- [--- REVISI PAJAK DIHILANGKAN ---] -->
-                <div class="receipt-line" style="display: none;">
+                <div class="receipt-line">
                     <span>Pajak (10%):</span>
                     <span id="payment-tax"></span>
                 </div>
-                <!-- [--- AKHIR REVISI ---] -->
                 <div class="receipt-line total">
                     <span>Total Bayar:</span>
                     <span id="payment-total"></span>
@@ -938,6 +934,16 @@
                     <span>Tanggal:</span>
                     <strong id="success-date" style="text-align: right;"></strong>
                 </div>
+                
+                <!-- ========================================================== -->
+                <!-- [--- PERUBAHAN 2: Baris HTML Baru Ditambahkan ---] -->
+                <!-- ========================================================== -->
+                <div class="receipt-line" style="font-size: 0.9rem;">
+                    <span>No. Antrian:</span>
+                    <strong id="success-queue-number" style="font-size: 1.1rem; color: #8B4513;"></strong>
+                </div>
+                <!-- ========================================================== -->
+
                 <div class="receipt-line" style="font-size: 0.9rem;">
                     <span>Order ID:</span>
                     <strong id="order-id" style="text-transform: uppercase;"></strong>
@@ -967,12 +973,10 @@
                     <span>Sub Total</span>
                     <span id="success-subtotal"></span>
                 </div>
-                <!-- [--- REVISI PAJAK DIHILANGKAN ---] -->
-                <div class="receipt-line" style="display: none;">
+                <div class="receipt-line">
                     <span>PPN 10%</span>
                     <span id="success-tax"></span>
                 </div>
-                <!-- [--- AKHIR REVISI ---] -->
                 
                 <div class="receipt-line total" style="font-size: 1.2rem; margin-top: 10px;">
                     <span>Total Payment</span>
@@ -1027,8 +1031,11 @@
 
     <script type="module">
         // Import fungsi Firebase
+        // ==========================================================
+        // [--- PERUBAHAN 1: Menambahkan 'runTransaction' ---]
+        // ==========================================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, getDoc, Timestamp, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, getDoc, Timestamp, query, orderBy, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
         // (Pastikan ini sesuai dengan project Anda)
@@ -1131,11 +1138,11 @@
         function updateActiveCategoryButton() {
              const categoryButtons = document.querySelectorAll('.category-btn');
              categoryButtons.forEach(btn => {
-                 if (btn.dataset.category === currentCategory) {
-                     btn.classList.add('active');
-                 } else {
-                     btn.classList.remove('active');
-                 }
+                if (btn.dataset.category === currentCategory) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
             });
         }
 
@@ -1470,13 +1477,12 @@
                 checkoutBtn.disabled = false;
             }
 
-            // [--- REVISI PAJAK DIHILANGKAN ---]
-            const tax = 0; // Math.round(subtotal * 0.10); // Pajak 10%
-            const total = subtotal; // + tax;
+            const tax = Math.round(subtotal * 0.10); // Pajak 10%
+            const total = subtotal + tax;
 
             cartCount.textContent = itemCount;
             cartSubtotal.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-            cartTax.textContent = `Rp ${tax.toLocaleString('id-ID')}`; // Tetap diisi 0
+            cartTax.textContent = `Rp ${tax.toLocaleString('id-ID')}`;
             cartTotal.textContent = `Rp ${total.toLocaleString('id-ID')}`;
         }
         
@@ -1521,9 +1527,8 @@
             
             // Calculate totals
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            // [--- REVISI PAJAK DIHILANGKAN ---]
-            const tax = 0; // Math.round(subtotal * 0.10);
-            const total = subtotal; // + tax;
+            const tax = Math.round(subtotal * 0.10);
+            const total = subtotal + tax;
 
             // Update payment modal details
             const paymentItems = document.getElementById('payment-items');
@@ -1538,7 +1543,7 @@
             });
 
             document.getElementById('payment-subtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-            document.getElementById('payment-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`; // Tetap diisi 0
+            document.getElementById('payment-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`;
             document.getElementById('payment-total').textContent = `Rp ${total.toLocaleString('id-ID')}`;
 
             closeModal('checkout-modal');
@@ -1557,6 +1562,9 @@
             document.getElementById('confirm-payment-btn').style.display = 'block';
         }
 
+        // ==========================================================
+        // [--- PERUBAHAN 3: Fungsi confirmPayment() diganti seluruhnya ---]
+        // ==========================================================
         window.confirmPayment = async function() {
             if (!selectedPaymentMethod) {
                 showNotification('Pilih metode pembayaran terlebih dahulu!', true);
@@ -1570,18 +1578,15 @@
             // Ambil data dari form sebelumnya
             const customerName = document.getElementById('customer-name').value;
             const tableNumber = document.getElementById('table-number').value;
-            // const phoneNumber = document.getElementById('phone-number').value; // Opsional
 
-            // Siapkan data pesanan untuk Firestore
+            // Siapkan data pesanan dasar
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            // [--- REVISI PAJAK DIHILANGKAN ---]
-            const tax = 0; // Math.round(subtotal * 0.10);
-            const total = subtotal; // + tax;
+            const tax = Math.round(subtotal * 0.10);
+            const total = subtotal + tax;
             
-            const orderData = {
+            const baseOrderData = {
                 customer: customerName,
                 table: tableNumber,
-                // phone: phoneNumber,
                 items: cart.map(item => ({
                     name: item.name,
                     variant: item.variant || null,
@@ -1589,54 +1594,90 @@
                     price: item.price
                 })),
                 subtotal: subtotal,
-                tax: tax, // Akan mengirim 0
-                total: total, // Akan mengirim nilai subtotal
+                tax: tax,
+                total: total,
                 status: 'pending', // Status awal: menunggu konfirmasi kasir
                 paymentMethod: selectedPaymentMethod,
                 createdAt: serverTimestamp() // Waktu pesanan dibuat
             };
 
+            let newQueueNumber = 0;
+
             try {
-                // Kirim pesanan ke koleksi 'orders' di Firestore
-                const orderDoc = await addDoc(collection(db, "orders"), orderData);
+                // --- AWAL LOGIKA TRANSAKSI ---
+                // 1. Tentukan referensi dokumen penghitung
+                const counterRef = doc(db, "counters", "dailyOrder");
+
+                // 2. Jalankan transaksi untuk mendapatkan nomor antrian
+                newQueueNumber = await runTransaction(db, async (transaction) => {
+                    const counterDoc = await transaction.get(counterRef);
+                    
+                    // Dapatkan tanggal hari ini (misal: "2025-11-09")
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    let newNumber;
+                    if (!counterDoc.exists() || counterDoc.data().lastResetDate !== today) {
+                        // Hari baru atau dokumen belum ada: Reset ke 1
+                        newNumber = 1;
+                        transaction.set(counterRef, {
+                            currentNumber: 1,
+                            lastResetDate: today
+                        });
+                    } else {
+                        // Hari yang sama: Tambah 1
+                        newNumber = counterDoc.data().currentNumber + 1;
+                        transaction.update(counterRef, {
+                            currentNumber: newNumber
+                        });
+                    }
+                    
+                    return newNumber;
+                });
+                // --- AKHIR LOGIKA TRANSAKSI ---
+
+                // 3. Gabungkan nomor antrian ke data pesanan
+                const finalOrderData = {
+                    ...baseOrderData,
+                    queueNumber: newQueueNumber // <-- FIELD BARU DITAMBAHKAN
+                };
+
+                // 4. Kirim pesanan ke koleksi 'orders'
+                const orderDoc = await addDoc(collection(db, "orders"), finalOrderData);
                 
-                // Tampilkan modal sukses
+                // 5. Tampilkan modal sukses
                 // --- MULAI POPULASI STRUK SUKSES ---
 
-                // Buat format tanggal
                 const now = new Date();
                 const formattedDate = now.toLocaleString('id-ID', {
                     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                     hour: '2-digit', minute: '2-digit'
                 });
 
-                // Hitung total item
                 let totalItems = 0;
                 cart.forEach(item => { totalItems += item.quantity; });
 
-                document.getElementById('order-id').textContent = `#${orderDoc.id.substring(0, 10)}`; // Tampilkan ID
+                // Tampilkan nomor antrian baru
+                document.getElementById('success-queue-number').textContent = `#${newQueueNumber}`;
+                document.getElementById('order-id').textContent = `#${orderDoc.id.substring(0, 10)}`;
                 document.getElementById('success-customer').textContent = customerName;
                 document.getElementById('success-table').textContent = `${tableNumber}`;
-                document.getElementById('success-date').textContent = formattedDate; // Tambah tanggal
-                document.getElementById('success-total-items').textContent = totalItems; // Tambah total item
+                document.getElementById('success-date').textContent = formattedDate;
+                document.getElementById('success-total-items').textContent = totalItems;
                 
-                // Isi item belanja
                 const successItemsContainer = document.getElementById('success-receipt-items');
-                successItemsContainer.innerHTML = ''; // Kosongkan dulu
+                successItemsContainer.innerHTML = '';
                 cart.forEach(item => {
                     successItemsContainer.innerHTML += `
                         <div class="receipt-line" style="font-size: 0.9rem;">
-                            <span>${item.quantity} x ${item.key}</span> <!-- Format: Qty x Nama (Varian) -->
+                            <span>${item.quantity} x ${item.key}</span>
                             <span>Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</span>
                         </div>
                     `;
                 });
 
-                // Isi Total
                 document.getElementById('success-subtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
-                // [--- REVISI PAJAK DIHILANGKAN ---]
-                document.getElementById('success-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`; // tax dari scope confirmPayment (nilainya 0)
-                document.getElementById('success-total').textContent = `Rp ${total.toLocaleString('id-ID')}`; // total dari scope confirmPayment (nilainya = subtotal)
+                document.getElementById('success-tax').textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+                document.getElementById('success-total').textContent = `Rp ${total.toLocaleString('id-ID')}`;
                 document.getElementById('success-payment-method').textContent = selectedPaymentMethod;
                 // --- AKHIR POPULASI STRUK SUKSES ---
 
@@ -1646,12 +1687,15 @@
                 showNotification('Pesanan berhasil dikirim!');
 
             } catch (error) {
-                console.error("Error mengirim pesanan: ", error);
+                console.error("Error mengirim pesanan atau transaksi: ", error);
                 showNotification('Gagal mengirim pesanan. Coba lagi.', true);
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = 'Konfirmasi Pembayaran';
             }
         }
+        // ==========================================================
+        // [--- AKHIR PERUBAHAN 3 ---]
+        // ==========================================================
 
 
         // --- FUNGSI UTILITAS ---
